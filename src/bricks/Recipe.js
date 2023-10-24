@@ -7,6 +7,11 @@ import style from '../css/recipe.module.css';
 
 
 function Recipe(props) {
+
+  function truncateText(text, maxLength) {
+    return text.substring(0, maxLength) + "...";
+  }
+
   return (
     <>
       <Col lg={4}>
@@ -22,7 +27,13 @@ function Recipe(props) {
               </h2>
             </Card.Title>
             <Card.Text>
-              {props.recipe.description}
+              {(() => {
+                if (props.shortText) {
+                  return truncateText(props.recipe.description, 120);
+                } else {
+                  return props.recipe.description;
+                }
+              })()}
             </Card.Text>
           </Card.Body>
         </Card>
