@@ -1,7 +1,7 @@
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import RecipesList from './bricks/RecipesList.js';
-import { Row } from "react-bootstrap";
+
+import RecipesList from "./bricks/RecipesList";
 
 const recipesList = [
   {
@@ -544,7 +544,7 @@ function App() {
   return (
     <div className="App">
       <h1>{cookbook.name}</h1>
-      <Row><RecipesList recipesList={recipesList}/></Row>
+      <RecipesList recipesList={recipesList}/>
     </div>
   );
 }
