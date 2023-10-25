@@ -28,11 +28,7 @@ function Recipe(props) {
             </Card.Title>
             <Card.Text>
               {(() => {
-                if (props.shortText) {
-                  return truncateText(props.recipe.description, 120);
-                } else {
-                  return props.recipe.description;
-                }
+                return props.shortText ? truncateText(props.recipe.description, 120) : props.recipe.description;
               })()}
             </Card.Text>
           </Card.Body>
