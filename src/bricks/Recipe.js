@@ -19,12 +19,10 @@ function Recipe(props) {
           <Card.Img variant="top" src={props.recipe.imgUri} alt={'Obrázek ${props.recipe.name}'} />
           <Card.Body>
             <Card.Title>
-              <h2>
                 <span>
                   <Icon path={ mdiFoodVariant } size={1.2} color="grey"></Icon>{" "}
                 </span>
                 {props.recipe.name}
-              </h2>
             </Card.Title>
             <Card.Text>
               {(() => {
