@@ -35,7 +35,7 @@ function RecipesList(props) {
                     .includes(searchBy.toLocaleLowerCase())
             );
         });
-    }, [searchBy]);
+    }, [searchBy, props.recipesList]);
 
     return (
         <>
@@ -83,13 +83,16 @@ function RecipesList(props) {
             </Row>
             <Row>
                 {(() => {
-                    if (view === "Grid") {
-                        return <RecipesGridView recipesList={filteredRecipesList} />
-                    } else if (view === "SmallGrid") {
-                        return <RecipesGridView recipesList={filteredRecipesList} shortText={true}/>
-                    } else {
-                        return <RecipesTableView recipesList={filteredRecipesList} />
-                    }
+                return filteredRecipesList.length > 0
+                    ? view === "Grid"
+                        ? <RecipesGridView recipesList={filteredRecipesList} />
+                        : view === "SmallGrid"
+                            ? <RecipesGridView recipesList={filteredRecipesList} allIngredients={props.allIngredients}
+                                               shortText={true} />
+                            : <RecipesTableView recipesList={filteredRecipesList} />
+                    : <div style={{ margin: "16px auto", textAlign: "center" }}>
+                        Nejsou žádné recepty k zobrazení
+                    </div>
                 })()}
             </Row>
         </>
