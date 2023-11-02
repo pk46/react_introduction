@@ -1,76 +1,63 @@
-import React, {useState, useEffect} from "react";
-import RecipesList from "./bricks/RecipesList";
+import { useState, useEffect } from "react";
+import {Outlet, useNavigate} from "react-router-dom";
 
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import styles from "./css/recipe.module.css";
+import Navbar from "react-bootstrap/Navbar";
+import {Container, Nav, NavbarOffcanvas, Offcanvas} from "react-bootstrap";
+import Button from "react-bootstrap/Button";
+import { mdiMoonNew, mdiWhiteBalanceSunny } from '@mdi/js';
 import Icon from "@mdi/react";
-import { mdiLoading } from "@mdi/js";
 
-
-const cookbook = {
-  name: "Kuchařka"
-}
 
 function App() {
 
-  const [recipesCall, setRecipesCall] = useState({
-    state: "pending",
-  });
+  const [darkMode, setDarkMode] = useState(false)
+  const navigate = useNavigate();
+  const htmlElement = document.documentElement;
 
-  const [ingredientsCall, setIngredientsCall] = useState({
-        state: "pending",
-  })
+  const toggleDarkMode = () => {
+      setDarkMode(!darkMode);
+      htmlElement.setAttribute('data-bs-theme', darkMode ? 'light' : 'dark');
+      };
 
-  function apiCall(call, setCall, url) {
-    fetch(url, {method: "GET"})
-        .then((response) => {
-            if (response.status >= 400) {
-                return response.json().then((errorResponse) => {
-                    setCall({ state: "error", error: errorResponse });
-                });
-                } else {
-                    return response.json().then((dataResponse) => {
-                    setCall({ state: "success", data: dataResponse });
-                });
-                }
-            })
-            .catch((error) => {
-                setCall({ state: "error", error: error.message });
-            });
-    }
 
-    useEffect(() => {
-        apiCall(recipesCall, setRecipesCall, `http://localhost:3000/recipe/list`);
-        apiCall(ingredientsCall, setIngredientsCall, `http://localhost:3000/ingredient/list`);
-    }, [])
+  return (
+      <div className="App">
+          <Navbar
+              fixed="top"
+              variant="dark"
+              bg="dark"
+              expand="sm"
+              className="mb-3"
+              >
+              <Container fluid>
+                  <Navbar.Brand style={{cursor: "pointer"}} onClick={() => navigate("/")}>Receptář</Navbar.Brand>
+                  <Navbar.Toggle id={"offcanvasNavbar-expad-sm"} />
+                  <NavbarOffcanvas id={"offcanvasNavbar-expand-sm"}>
+                      <Offcanvas.Header closeButton>
+                          <Offcanvas.Title id={"offcanvasNavbarLabel-expand-sm"}>
+                              Receptář
+                          </Offcanvas.Title>
+                      </Offcanvas.Header>
+                      <Offcanvas.Body>
+                          <Nav className="justify-content-end flex-grow-1 pe-3">
+                              <Button onClick={() => navigate("/recipeList")} variant="primary">Recepty</Button>
+                              <Button onClick={() => navigate("/ingredientList")} variant="success"
+                              style={{marginInline: 7}}>Ingredience</Button>
+                              <Button onClick={toggleDarkMode} variant="secondary">
+                                  {darkMode === false ?
+                                  <Icon onClick={toggleDarkMode} path={mdiMoonNew} size={1} /> :
+                                  <Icon path={mdiWhiteBalanceSunny} size={1} />}</Button>
+                          </Nav>
+                      </Offcanvas.Body>
+                  </NavbarOffcanvas>
+              </Container>
+          </Navbar>
 
-    function getChild() {
-      if (recipesCall.state === "pending" || ingredientsCall.state === "pending") {
-        return (
-            <div className={styles.loading}>
-                <Icon path={mdiLoading} spin={true} size={5} />
-            </div>
-        );
-      } else if (recipesCall.state === "success" && ingredientsCall.state === "success") {
-        return (
-            <>
-                <h1>{cookbook.name}</h1>
-                <RecipesList recipesList={recipesCall.data} allIngredients={ingredientsCall.data} />
-            </>
-        );
-      } else if (recipesCall.state === "error" || ingredientsCall.state === "error") {
-        return (
-            <div className={styles.error}>
-                <div>{recipesCall.state === "error" ? "recipesCall.error" : "ingredientsCall.error"}</div>
-                <br />
-                <pre>{JSON.stringify(recipesCall.error, null, 2)}</pre>
-                <pre>{JSON.stringify(ingredientsCall.error, null, 2)}</pre>
-            </div>
-        );
-      }
-    }
-  return <div className="App">{getChild()}</div>
+          <Outlet />
+      </div>
+  );
 }
 
 export default App;

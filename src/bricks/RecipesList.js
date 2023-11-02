@@ -41,7 +41,7 @@ function RecipesList(props) {
         <>
             <Row>
                 <Col>
-                    <Navbar bg="light">
+                    <Navbar>
                         <div className="container-fluid">
                             <Navbar.Brand>Seznam receptů</Navbar.Brand>
                             <Form className="d-flex" onSubmit={handleSearch}>
