@@ -2,7 +2,7 @@ import Form from "react-bootstrap/Form";
 import React, { useEffect, useState } from "react";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
-function IngredientsDropdown({ selectedValue, ingredientAmount }) {
+function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }) {
     const [ingredientsLoadCall, setIngredientsLoadCall] = useState({
         state: "pending",
     });
@@ -42,6 +42,10 @@ function IngredientsDropdown({ selectedValue, ingredientAmount }) {
         ingredientAmount(e.target.value)
     }
 
+    function handleIngredientUnitChange(e) {
+        ingredientUnit(e.target.value)
+    }
+
     return (
         <>
             {(() => {
@@ -66,9 +70,18 @@ function IngredientsDropdown({ selectedValue, ingredientAmount }) {
                                         </Dropdown.Item>
                                     ))}
                                 </DropdownButton>
+                                <Form.Label>Množství</Form.Label>
                                 <Form.Control
                                     type="number"
                                     onChange={handleIngredientAmountChange}
+                                >
+                                </Form.Control>
+                                <Form.Label>Jednotky</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    minLength={1}
+                                    onChange={handleIngredientUnitChange}
+                                    required
                                 >
                                 </Form.Control>
                             </>
