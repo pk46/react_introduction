@@ -1,105 +1,148 @@
 import {Modal} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Form from "react-bootstrap/Form";
 import WysiwygEditor from "./WysiwygEditor";
 import IngredientsDropdown from "./IngredientsDropdown";
-import dropdown from "bootstrap/js/src/dropdown";
+import Icon from "@mdi/react";
+import {mdiLoading} from "@mdi/js";
 
-function NewRecipeModalForm({recipe, showModal, setShowModal}) {
-    const [formData, setFormData] = useState({
-        name: "",
-        imgUri: "",
-        description: "",
-        ingredients: [{
-            id: "",
-            amount: "",
-            unit: ""
-        }],
-    });
-
+function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
     const defaultForm = {
         name: "",
-        imgUri: "",
         description: "",
-        ingredients: [{
-            id: "",
-            amount: "",
-            unit: ""
-        }],
+        imgUri: "",
+        ingredients: [],
     };
 
+    const [formData, setFormData] = useState(defaultForm);
     const [validated, setValidated] = useState(false);
+    const [recipeAddCall, setRecipeAddCall] = useState({
+        state: 'inactive'
+    });
 
-    const handleDropdownValueChange = (value) => {
-        const parsed = JSON.parse(value)
-        setField("ingredients", [{name: parsed.name, id: parsed.id}]);
+    const handleDropdownValueChange = (value, index) => {
+        const parsed = JSON.parse(value);
+        setField("ingredients", [...formData.ingredients.slice(0, index), { name: parsed.name, id: parsed.id }]);
     };
 
-    const handleIngredientAmountChange = (value) => {
-        formData.ingredients.amount = value;
-        setField("ingredients.amount", value)
+    const handleIngredientAmountChange = (value, index) => {
+        setField("ingredients.amount", value, index);
     }
 
-    const [dropDowns, setDropdowns] = useState([<IngredientsDropdown selectedValue={handleDropdownValueChange} ingredientAmount={handleIngredientAmountChange} required/>]);
+    const handleIngredientUnitChange = (value, index) => {
+        setField("ingredients.unit", value, index);
+    }
+
+    const [dropDowns, setDropdowns] = useState(
+        [
+            <IngredientsDropdown
+            selectedValue={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
+            ingredientAmount={(value) => handleIngredientAmountChange(value, formData.ingredients.length)}
+            ingredientUnit={(value) => handleIngredientUnitChange(value, formData.ingredients.length)} required />
+        ]
+    );
 
     const handleAddDropDown = () => {
-
-        setDropdowns(dropDown => [...dropDown, <IngredientsDropdown selectedValue={handleDropdownValueChange} ingredientAmount={handleIngredientAmountChange} required />]);
+        setDropdowns(dropDown => [...dropDown,
+            <IngredientsDropdown
+                selectedValue={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
+                ingredientAmount={(value) => handleIngredientAmountChange(value, formData.ingredients.length)}
+                ingredientUnit={(value) => handleIngredientUnitChange(value, formData.ingredients.length)} required
+            />
+        ]);
     }
 
     const handleRemoveDropDown = () => {
-        const dropDownArray = [...dropDowns]
-        dropDownArray.pop()
-        setDropdowns(dropDownArray)
-    }
+        setFormData((prevData) => ({
+            ...prevData,
+            ingredients: prevData.ingredients.slice(0, -1),
+        }));
+        const dropDownArray = [...dropDowns];
+        dropDownArray.splice(-1, 1);
+        setDropdowns(dropDownArray);
+    };
 
-    const setField = (name, value) => {
+
+    const setField = (name, value, index) => {
         if (name === "ingredients") {
-            setFormData(() => ({
-                ...formData,
+            setFormData((prevData) => ({
+                ...prevData,
                 ingredients: value,
             }));
         } else if (name === "ingredients.amount") {
-            setFormData(prevFormData => ({
-                ...prevFormData,
-                ingredients: [
-                    {
-                        ...prevFormData.ingredients[0],
-                        amount: Number(value),
-                    },
-                ],
-            }));
+            setFormData((prevData) => {
+                const updatedIngredients = [...prevData.ingredients];
+                updatedIngredients[index] = {
+                    ...updatedIngredients[index],
+                    amount: Number(value),
+                };
+                return {
+                    ...prevData,
+                    ingredients: updatedIngredients,
+                };
+            });
+        } else if (name === "ingredients.unit") {
+            setFormData((prevData) => {
+                const updatedIngredients = [...prevData.ingredients];
+                updatedIngredients[index] = {
+                    ...updatedIngredients[index],
+                    unit: value,
+                };
+                return {
+                    ...prevData,
+                    ingredients: updatedIngredients,
+                };
+            });
         } else {
-            setFormData(() => ({
-                ...formData,
+            setFormData((prevData) => ({
+                ...prevData,
                 [name]: value,
             }));
         }
     };
 
+
     const handleSubmit = async (e) => {
         const form = e.currentTarget;
+
+        e.preventDefault();
+        e.stopPropagation();
 
         const payload = {
             ...formData,
         };
 
         if (!form.checkValidity()) {
-            e.preventDefault();
-            e.stopPropagation();
-
+            return;
+        } else {
+            setValidated(true);
         }
-        setValidated(true);
 
-        console.log(payload)
-        handleCloseModal()
 
+        setRecipeAddCall({state: "pending"});
+        const result = await fetch(`http://localhost:3000/recipe/create`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload)
+            });
+        const data = await result.json();
+        if (result.status >= 400) {
+            setRecipeAddCall({ state: "error", error: data });
+            console.log("data:" + data)
+        } else {
+            setRecipeAddCall({ state: "success", data });
+            handleCloseModal();
+        }
     };
 
     const handleCloseModal = () => {
         setShowModal({state: false})
         setFormData(defaultForm);
+        setValidated(false)
     }
 
     useEffect(() => {
@@ -107,14 +150,14 @@ function NewRecipeModalForm({recipe, showModal, setShowModal}) {
             setFormData(defaultForm)
         } else {
         setFormData({
-            name: recipe.name,
-            imgUri: recipe.imgUri,
-            description: recipe.description,
-            ingredients: [{
-                id: recipe.ingredients[0].id,
-                amount: recipe.ingredients[0].amount,
-                unit: recipe.ingredients[0].unit
-            }]
+            "name": recipe.name,
+            "description": recipe.description,
+            "imgUri": recipe.imgUri,
+            "ingredients": recipe.ingredients.map(ingredient => ({
+                "id": ingredient.id,
+                "amount": ingredient.amount,
+                "unit": ingredient.unit
+            }))
         })}
     }, [recipe]);
 
@@ -156,7 +199,6 @@ function NewRecipeModalForm({recipe, showModal, setShowModal}) {
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            {/*<IngredientsDropdown selectedValue={handleDropdownValueChange} required/>*/}
                             <Form.Label>Seznam ingrediencí</Form.Label>
                             {dropDowns.map((ingredient, i) => {
                                 return <div key={i}>{ingredient}</div>
@@ -169,23 +211,35 @@ function NewRecipeModalForm({recipe, showModal, setShowModal}) {
                         <Button onClick={handleRemoveDropDown}>Odstranit ingredienci</Button>
                     </Modal.Body>
                     <Modal.Footer>
-                        <div className="d-flex flex-row gap-2">
+                        <div className="d-flex flex-row justify-content-between align-items-center w-100">
+                            <div>
+                                { recipeAddCall.state === 'error' &&
+                                    <div className="text-danger">Error: {recipeAddCall.error.errorMessage}</div>
+                                }
+                            </div>
+                            <div className="d-flex flex-row gap-2">
+                                <Button
+                                    className="btn btn-sm"
+                                    variant="secondary"
+                                    onClick={handleCloseModal}
+                                >
+                                    Zavřít
+                                </Button>
                             <Button
-                                className="btn btn-sm"
-                                variant="secondary"
-                                onClick={handleCloseModal}
-                            >
-                                Zavřít
+                                type="submit"
+                                style={{ float: "right" }}
+                                variant="primary"
+                                className="btn btn-success btn-sm"
+                                onClick={handleSubmit}
+                                disabled={recipeAddCall.state === 'pending'}
+                                >{ recipeAddCall.state === 'pending' ? (
+                                <Icon size={0.8} path={mdiLoading} spin={true} />
+                            ) : (
+                                "Přidat"
+                            )}
                             </Button>
+                            </div>
                         </div>
-                        <Button
-                            type="submit"
-                            style={{ float: "right" }}
-                            variant="primary"
-                            className="btn btn-success btn-sm"
-                            onClick={handleSubmit}
-                        >Odeslat
-                        </Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
