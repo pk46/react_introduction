@@ -74,6 +74,7 @@ function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }
                                 <Form.Control
                                     type="number"
                                     onChange={handleIngredientAmountChange}
+                                    required
                                 >
                                 </Form.Control>
                                 <Form.Label>Jednotky</Form.Label>

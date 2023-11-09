@@ -12,12 +12,9 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
         name: "",
         description: "",
         imgUri: "",
-        ingredients: [{
-            id: "",
-            amount: "",
-            unit: ""
-        }],
+        ingredients: [],
     };
+
     const [formData, setFormData] = useState(defaultForm);
     const [validated, setValidated] = useState(false);
     const [recipeAddCall, setRecipeAddCall] = useState({
@@ -25,79 +22,86 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
     });
 
     const handleDropdownValueChange = (value, index) => {
-        const parsed = JSON.parse(value)
-        setField("ingredients", [{name: parsed.name, id: parsed.id}]);
+        const parsed = JSON.parse(value);
+        setField("ingredients", [...formData.ingredients.slice(0, index), { name: parsed.name, id: parsed.id }]);
     };
 
-    const handleIngredientAmountChange = (value) => {
-        formData.ingredients.amount = value;
-        setField("ingredients.amount", value)
+    const handleIngredientAmountChange = (value, index) => {
+        setField("ingredients.amount", value, index);
     }
 
-    const handleIngredientUnitChange = (value) => {
-        formData.ingredients.unit = value;
-        setField("ingredients.unit", value)
+    const handleIngredientUnitChange = (value, index) => {
+        setField("ingredients.unit", value, index);
     }
 
     const [dropDowns, setDropdowns] = useState(
         [
             <IngredientsDropdown
-            selectedValue={handleDropdownValueChange}
-            ingredientAmount={handleIngredientAmountChange}
-            ingredientUnit={handleIngredientUnitChange} required />
+            selectedValue={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
+            ingredientAmount={(value) => handleIngredientAmountChange(value, formData.ingredients.length)}
+            ingredientUnit={(value) => handleIngredientUnitChange(value, formData.ingredients.length)} required />
         ]
     );
 
     const handleAddDropDown = () => {
         setDropdowns(dropDown => [...dropDown,
             <IngredientsDropdown
-                selectedValue={handleDropdownValueChange}
-                ingredientAmount={handleIngredientAmountChange}
-                ingredientUnit={handleIngredientUnitChange} required
+                selectedValue={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
+                ingredientAmount={(value) => handleIngredientAmountChange(value, formData.ingredients.length)}
+                ingredientUnit={(value) => handleIngredientUnitChange(value, formData.ingredients.length)} required
             />
         ]);
     }
 
     const handleRemoveDropDown = () => {
-        const dropDownArray = [...dropDowns]
-        dropDownArray.splice(-1, 1)
-        setDropdowns(dropDownArray)
-    }
+        setFormData((prevData) => ({
+            ...prevData,
+            ingredients: prevData.ingredients.slice(0, -1),
+        }));
+        const dropDownArray = [...dropDowns];
+        dropDownArray.splice(-1, 1);
+        setDropdowns(dropDownArray);
+    };
 
-    const setField = (name, value) => {
+
+    const setField = (name, value, index) => {
         if (name === "ingredients") {
-            setFormData(() => ({
-                ...formData,
+            setFormData((prevData) => ({
+                ...prevData,
                 ingredients: value,
             }));
         } else if (name === "ingredients.amount") {
-            setFormData(prevFormData => ({
-                ...prevFormData,
-                ingredients: [
-                    {
-                        ...prevFormData.ingredients[0],
-                        amount: Number(value),
-                    },
-                ],
-            }));
+            setFormData((prevData) => {
+                const updatedIngredients = [...prevData.ingredients];
+                updatedIngredients[index] = {
+                    ...updatedIngredients[index],
+                    amount: Number(value),
+                };
+                return {
+                    ...prevData,
+                    ingredients: updatedIngredients,
+                };
+            });
         } else if (name === "ingredients.unit") {
-            setFormData(prevFormData => ({
-                ...prevFormData,
-                ingredients: [
-                    {
-                        ...prevFormData.ingredients[0],
-                        unit: value,
-                    }
-                ]
-            }))
-        } else
-         {
-            setFormData(() => ({
-                ...formData,
+            setFormData((prevData) => {
+                const updatedIngredients = [...prevData.ingredients];
+                updatedIngredients[index] = {
+                    ...updatedIngredients[index],
+                    unit: value,
+                };
+                return {
+                    ...prevData,
+                    ingredients: updatedIngredients,
+                };
+            });
+        } else {
+            setFormData((prevData) => ({
+                ...prevData,
                 [name]: value,
             }));
         }
     };
+
 
     const handleSubmit = async (e) => {
         const form = e.currentTarget;
@@ -115,25 +119,24 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
             setValidated(true);
         }
 
-        console.log(JSON.stringify(payload))
 
-        // setRecipeAddCall({state: "pending"});
-        // const result = await fetch(`http://localhost:3000/recipe/create`,
-        //     {
-        //         method: "POST",
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //         },
-        //         body: JSON.stringify(payload)
-        //     });
-        // const data = await result.json();
-        // if (result.status >= 400) {
-        //     setRecipeAddCall({ state: "error", error: data });
-        //     console.log("data:" + data)
-        // } else {
-        //     setRecipeAddCall({ state: "success", data });
-        //     handleCloseModal();
-        // }
+        setRecipeAddCall({state: "pending"});
+        const result = await fetch(`http://localhost:3000/recipe/create`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload)
+            });
+        const data = await result.json();
+        if (result.status >= 400) {
+            setRecipeAddCall({ state: "error", error: data });
+            console.log("data:" + data)
+        } else {
+            setRecipeAddCall({ state: "success", data });
+            handleCloseModal();
+        }
     };
 
     const handleCloseModal = () => {
@@ -161,7 +164,7 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
     return (
         <>
             <Modal show={showModal} onHide={handleCloseModal}>
-                <Form noValidate validated={validated}>
+                <Form noValidate validated={validated} onSubmit={(e) => handleSubmit(e)}>
                     <Modal.Header closeButton>
                         <Modal.Title>{(recipe) ? "Úprava receptu" : "Nový recept"}</Modal.Title>
                     </Modal.Header>
