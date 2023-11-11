@@ -13,9 +13,6 @@ import NewRecipeModalForm from "./bricks/NewRecipeModalForm";
 
 function App() {
 
-    const [showModal, setShowModal] = useState({
-        state: false
-    });
     const [darkMode, setDarkMode] = useState(false)
     const navigate = useNavigate();
     const htmlElement = document.documentElement;
@@ -47,9 +44,7 @@ function App() {
                             <Nav className="justify-content-end flex-grow-1 pe-3">
                                 <Button onClick={() => navigate("/recipeList")} variant="primary">Recepty</Button>
                                 <Button onClick={() => navigate("/ingredientList")} variant="primary"
-                                        style={{marginLeft: 7}}>Ingredience</Button>
-                                <Button onClick={() => setShowModal({state: true})} variant="success"
-                                        style={{marginInline: 7}}>Nový recept</Button>
+                                        style={{marginInline: 7}}>Ingredience</Button>
                                 <Button onClick={toggleDarkMode} variant="secondary">
                                     {darkMode === false ?
                                         <Icon onClick={toggleDarkMode} path={mdiMoonNew} size={1} /> :
@@ -59,7 +54,6 @@ function App() {
                     </NavbarOffcanvas>
                 </Container>
             </Navbar>
-            <NewRecipeModalForm showModal={showModal.state} setShowModal={setShowModal} />
             <Outlet />
         </div>
     );

@@ -9,13 +9,14 @@ import {mdiLoading} from "@mdi/js";
 
 
 const defaultForm = {
+    id: "",
     name: "",
     description: "",
     imgUri: "",
     ingredients: [],
 };
 
-function NewRecipeModalForm({showModal, setShowModal}) {
+function NewRecipeModalForm({showModal, setShowModal, recipe}) {
     const [formData, setFormData] = useState(defaultForm);
     const [validated, setValidated] = useState(false);
     const [recipeAddCall, setRecipeAddCall] = useState({
@@ -23,9 +24,8 @@ function NewRecipeModalForm({showModal, setShowModal}) {
     });
 
     const handleDropdownValueChange = (value, index) => {
-        const parsed = JSON.parse(value);
         setField("ingredients", [...formData.ingredients.slice(0, index),
-            { name: parsed.name, id: parsed.id }], index);
+            { name: value.name, id: value.id }], index);
     };
 
     const handleIngredientAmountChange = (value, index) => {
@@ -39,7 +39,7 @@ function NewRecipeModalForm({showModal, setShowModal}) {
     const [dropDowns, setDropdowns] = useState(
         [
             <IngredientsDropdown
-            selectedValue={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
+            selectedIngredient={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
             ingredientAmount={(value) => handleIngredientAmountChange(value, formData.ingredients.length)}
             ingredientUnit={(value) => handleIngredientUnitChange(value, formData.ingredients.length)} required />
         ]
@@ -48,7 +48,7 @@ function NewRecipeModalForm({showModal, setShowModal}) {
     const handleAddDropDown = () => {
         setDropdowns(dropDown => [...dropDown,
             <IngredientsDropdown
-                selectedValue={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
+                selectedIngredient={(value) => handleDropdownValueChange(value, formData.ingredients.length)}
                 ingredientAmount={(value) => handleIngredientAmountChange(value, formData.ingredients.length)}
                 ingredientUnit={(value) => handleIngredientUnitChange(value, formData.ingredients.length)} required
             />
@@ -115,7 +115,7 @@ function NewRecipeModalForm({showModal, setShowModal}) {
             };
 
             setRecipeAddCall({state: "pending"});
-            const result = await fetch(`http://localhost:3000/recipe/create`,
+            const result = await fetch(`http://localhost:3000/recipe/${(recipe) ? "update" : "create"}`,
                 {
                     method: "POST",
                     headers: {
@@ -140,28 +140,29 @@ function NewRecipeModalForm({showModal, setShowModal}) {
         setFormData(defaultForm);
     }
 
-    // useEffect(() => {
-    //     if (!recipe) {
-    //         setFormData(defaultForm)
-    //     } else {
-    //     setFormData({
-    //         "name": recipe.name,
-    //         "description": recipe.description,
-    //         "imgUri": recipe.imgUri,
-    //         "ingredients": recipe.ingredients.map(ingredient => ({
-    //             "id": ingredient.id,
-    //             "amount": ingredient.amount,
-    //             "unit": ingredient.unit
-    //         }))
-    //     })}
-    // }, [recipe]);
+    useEffect(() => {
+        if (!recipe) {
+            setFormData(defaultForm)
+        } else {
+        setFormData({
+            "id": recipe.id,
+            "name": recipe.name,
+            "description": recipe.description,
+            "imgUri": recipe.imgUri,
+            "ingredients": recipe.ingredients.map(ingredient => ({
+                "id": ingredient.id,
+                "amount": ingredient.amount,
+                "unit": ingredient.unit
+            }))
+        })}
+    }, [recipe]);
 
     return (
         <>
             <Modal show={showModal} onHide={handleCloseModal}>
                 <Form noValidate validated={validated} onSubmit={handleSubmit}>
                     <Modal.Header closeButton>
-                        <Modal.Title>Nový recept</Modal.Title>
+                        <Modal.Title>{(recipe) ? "Upravit recept" : "Nový recept"}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form.Group className="mb-3">
@@ -229,7 +230,7 @@ function NewRecipeModalForm({showModal, setShowModal}) {
                                 >{ recipeAddCall.state === 'pending' ? (
                                 <Icon size={0.8} path={mdiLoading} spin={true} />
                             ) : (
-                                "Přidat"
+                                (recipe) ? "Upravit" : "Uložit"
                             )}
                             </Button>
                             </div>

@@ -9,11 +9,15 @@ import Form from "react-bootstrap/Form";
 
 import Icon from "@mdi/react";
 import {mdiMagnify} from "@mdi/js";
+import NewRecipeModalForm from "./NewRecipeModalForm";
 
 
 function RecipesList(props) {
     const [view, setView] = useState("Grid");
     const [searchBy, setSearchBy] = useState("");
+    const [showModal, setShowModal] = useState({
+        state: false
+    });
 
     function handleSearch(event) {
         event.preventDefault();
@@ -41,7 +45,9 @@ function RecipesList(props) {
         <>
             <Row>
                 <Col>
-                    <Navbar>
+                    <Navbar
+                    fixed="top"
+                    style={{top: 56}}>
                         <div className="container-fluid">
                             <Navbar.Brand>Seznam receptů</Navbar.Brand>
                             <Form className="d-flex" onSubmit={handleSearch}>
@@ -53,6 +59,9 @@ function RecipesList(props) {
                                     aria-label="Hledat"
                                     onChange={handleSearchDelete}
                                 />
+                                <Button onClick={() => setShowModal({state: true})} variant="success"
+                                        style={{marginLeft: 7}}>Nový recept
+                                </Button>
                                 <Button
                                     style={{marginInline:"8px"}}
                                     variant="outline-success"
@@ -81,7 +90,7 @@ function RecipesList(props) {
                     </Navbar>
                 </Col>
             </Row>
-            <Row>
+            <Row style={{paddingTop: 30}}>
                 {(() => {
                 return filteredRecipesList.length > 0
                     ? view === "Grid"
@@ -95,6 +104,7 @@ function RecipesList(props) {
                     </div>
                 })()}
             </Row>
+            <NewRecipeModalForm showModal={showModal.state} setShowModal={setShowModal} />
         </>
     )
 }
