@@ -7,14 +7,15 @@ import IngredientsDropdown from "./IngredientsDropdown";
 import Icon from "@mdi/react";
 import {mdiLoading} from "@mdi/js";
 
-function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
-    const defaultForm = {
-        name: "",
-        description: "",
-        imgUri: "",
-        ingredients: [],
-    };
 
+const defaultForm = {
+    name: "",
+    description: "",
+    imgUri: "",
+    ingredients: [],
+};
+
+function NewRecipeModalForm({showModal, setShowModal}) {
     const [formData, setFormData] = useState(defaultForm);
     const [validated, setValidated] = useState(false);
     const [recipeAddCall, setRecipeAddCall] = useState({
@@ -23,7 +24,8 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
 
     const handleDropdownValueChange = (value, index) => {
         const parsed = JSON.parse(value);
-        setField("ingredients", [...formData.ingredients.slice(0, index), { name: parsed.name, id: parsed.id }]);
+        setField("ingredients", [...formData.ingredients.slice(0, index),
+            { name: parsed.name, id: parsed.id }], index);
     };
 
     const handleIngredientAmountChange = (value, index) => {
@@ -63,7 +65,6 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
         setDropdowns(dropDownArray);
     };
 
-
     const setField = (name, value, index) => {
         if (name === "ingredients") {
             setFormData((prevData) => ({
@@ -102,71 +103,65 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
         }
     };
 
-
     const handleSubmit = async (e) => {
-        const form = e.currentTarget;
-
         e.preventDefault();
         e.stopPropagation();
 
-        const payload = {
-            ...formData,
+        const form = e.currentTarget;
+
+        if (form.checkValidity()) {
+            const payload = {
+                ...formData,
+            };
+
+            setRecipeAddCall({state: "pending"});
+            const result = await fetch(`http://localhost:3000/recipe/create`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload)
+                });
+            const data = await result.json();
+            if (result.status >= 400) {
+                setRecipeAddCall({ state: "error", error: data });
+                console.log("data:" + data)
+            } else {
+                setRecipeAddCall({ state: "success", data });
+                handleCloseModal();
+            }
         };
-
-        if (!form.checkValidity()) {
-            return;
-        } else {
-            setValidated(true);
-        }
-
-
-        setRecipeAddCall({state: "pending"});
-        const result = await fetch(`http://localhost:3000/recipe/create`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload)
-            });
-        const data = await result.json();
-        if (result.status >= 400) {
-            setRecipeAddCall({ state: "error", error: data });
-            console.log("data:" + data)
-        } else {
-            setRecipeAddCall({ state: "success", data });
-            handleCloseModal();
-        }
+        setValidated(true);
     };
 
     const handleCloseModal = () => {
         setShowModal({state: false})
         setFormData(defaultForm);
-        setValidated(false)
     }
 
-    useEffect(() => {
-        if (!recipe) {
-            setFormData(defaultForm)
-        } else {
-        setFormData({
-            "name": recipe.name,
-            "description": recipe.description,
-            "imgUri": recipe.imgUri,
-            "ingredients": recipe.ingredients.map(ingredient => ({
-                "id": ingredient.id,
-                "amount": ingredient.amount,
-                "unit": ingredient.unit
-            }))
-        })}
-    }, [recipe]);
+    // useEffect(() => {
+    //     if (!recipe) {
+    //         setFormData(defaultForm)
+    //     } else {
+    //     setFormData({
+    //         "name": recipe.name,
+    //         "description": recipe.description,
+    //         "imgUri": recipe.imgUri,
+    //         "ingredients": recipe.ingredients.map(ingredient => ({
+    //             "id": ingredient.id,
+    //             "amount": ingredient.amount,
+    //             "unit": ingredient.unit
+    //         }))
+    //     })}
+    // }, [recipe]);
 
     return (
         <>
             <Modal show={showModal} onHide={handleCloseModal}>
-                <Form noValidate validated={validated} onSubmit={(e) => handleSubmit(e)}>
+                <Form noValidate validated={validated} onSubmit={handleSubmit}>
                     <Modal.Header closeButton>
-                        <Modal.Title>{(recipe) ? "Úprava receptu" : "Nový recept"}</Modal.Title>
+                        <Modal.Title>Nový recept</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form.Group className="mb-3">
@@ -230,7 +225,6 @@ function NewRecipeModalForm({recipe, showModal, setShowModal, onComplete}) {
                                 style={{ float: "right" }}
                                 variant="primary"
                                 className="btn btn-success btn-sm"
-                                onClick={handleSubmit}
                                 disabled={recipeAddCall.state === 'pending'}
                                 >{ recipeAddCall.state === 'pending' ? (
                                 <Icon size={0.8} path={mdiLoading} spin={true} />
