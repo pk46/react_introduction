@@ -1,6 +1,8 @@
 import Form from "react-bootstrap/Form";
 import React, { useEffect, useState } from "react";
 import { DropdownButton, Dropdown } from "react-bootstrap";
+import {mdiLoading} from "@mdi/js";
+import Icon from "@mdi/react";
 
 function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }) {
     const [ingredientsLoadCall, setIngredientsLoadCall] = useState({
@@ -51,7 +53,7 @@ function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }
             {(() => {
                 switch (ingredientsLoadCall.state) {
                     case "pending":
-                        return <div>Nacitam data</div>;
+                        return <Icon size={0.8} path={mdiLoading} spin={true} />
                     case "success":
                         return (
                             <>
