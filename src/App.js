@@ -1,4 +1,4 @@
-import { useState} from "react";
+import {useContext, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
 
 import './App.css';
@@ -9,6 +9,7 @@ import Button from "react-bootstrap/Button";
 import {mdiMoonNew, mdiPencilOutline, mdiWhiteBalanceSunny} from '@mdi/js';
 import Icon from "@mdi/react";
 import NewRecipeModalForm from "./bricks/NewRecipeModalForm";
+import UserContext from "./UserProvider";
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
     const [darkMode, setDarkMode] = useState(false)
     const navigate = useNavigate();
     const htmlElement = document.documentElement;
+    const {setIsAuthorized, isAuthorized} = useContext(UserContext);
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
@@ -48,7 +50,13 @@ function App() {
                                 <Button onClick={toggleDarkMode} variant="secondary">
                                     {darkMode === false ?
                                         <Icon onClick={toggleDarkMode} path={mdiMoonNew} size={1} /> :
-                                        <Icon path={mdiWhiteBalanceSunny} size={1} />}</Button>
+                                        <Icon path={mdiWhiteBalanceSunny} size={1} />}
+                                </Button>
+                                <Button style={{marginLeft: 7}}
+                                        variant={isAuthorized ? "danger" : "success"}
+                                        onClick={() => isAuthorized ? setIsAuthorized(false) : setIsAuthorized(true)}>
+                                    {isAuthorized ? "Odhlásit" : "Přihlásit"}
+                                </Button>
                             </Nav>
                         </Offcanvas.Body>
                     </NavbarOffcanvas>

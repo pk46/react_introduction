@@ -15,7 +15,7 @@ function RecipesTableView(props) {
                 return (
                     <tr key={recipe.name}>
                     <td>{recipe.name}</td>
-                    <td>{recipe.description}</td>
+                    <td><div dangerouslySetInnerHTML={{ __html: recipe.description }} /></td>
                 </tr>
                 );
             })}

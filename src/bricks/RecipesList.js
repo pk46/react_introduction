@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, {useState, useMemo, useContext} from "react";
 import RecipesGridView from "./RecipesGridView";
 import RecipesTableView from "./RecipesTableView";
 import NewRecipeModalForm from "./NewRecipeModalForm";
@@ -7,6 +7,7 @@ import {Row, Col} from "react-bootstrap";
 import Navbar from "react-bootstrap/Navbar"
 import Button from "react-bootstrap/Button"
 import Form from "react-bootstrap/Form";
+import UserContext from "../UserProvider";
 
 
 function RecipesList(props) {
@@ -15,6 +16,7 @@ function RecipesList(props) {
     const [showModal, setShowModal] = useState({
         state: false
     });
+    const {isAuthorized} = useContext(UserContext);
 
     function handleSearch(event) {
         const inputLength = event.target.value.length;
@@ -73,9 +75,11 @@ function RecipesList(props) {
                                         handleSearchDelete(event);
                                     }}
                                 />
-                                <Button onClick={() => setShowModal({state: true})} variant="success"
-                                        style={{marginLeft: 7}}>Nový recept
-                                </Button>
+                                {isAuthorized &&
+                                    <Button onClick={() => setShowModal({state: true})} variant="success"
+                                            style={{marginLeft: 7}}>Nový recept
+                                    </Button>
+                                }
                                 <Button
                                     style={{marginInline:"8px"}}
                                     className="d-none d-md-block"
