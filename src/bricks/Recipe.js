@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 
 import Card from 'react-bootstrap/Card';
 import {Alert, Col, Modal} from "react-bootstrap";
@@ -9,6 +9,7 @@ import {mdiFoodVariant, mdiPencilOutline} from '@mdi/js';
 import style from '../css/recipe.module.css';
 import NewRecipeModalForm from "./NewRecipeModalForm";
 import RecipeDelete from "./RecipeDelete";
+import UserContext from "../UserProvider";
 
 
 function Recipe(props) {
@@ -28,6 +29,8 @@ function Recipe(props) {
         setIsModalShown(!isModalShown);
     }
 
+    const {isAuthorized} = useContext(UserContext);
+
     function truncateText(text, maxLength) {
         return text.substring(0, maxLength) + "...";
     }
@@ -46,7 +49,6 @@ function Recipe(props) {
     }
 
     const handleRecipeDeleted = (recipeId) => {
-        // setIsModalShown(false);
         if (props.recipesCall.state === "success") {
             props.setRecipesCall({
                 state: "success",
@@ -62,17 +64,22 @@ function Recipe(props) {
                     <Card.Img variant="top" src={props.recipe.imgUri} alt={'Obrázek ${props.recipe.name}'} />
                     <Card.Body>
                         <Card.Title>
-                            <Icon
-                                size={0.8}
-                                path={mdiPencilOutline}
-                                style={{ color: 'orange', cursor: 'pointer' }}
-                                onClick={() => handleShowModal(props.recipe)}
-                            />
-                            <RecipeDelete recipe={props.recipe}
-                                          onError={(error) => setDeleteRecipeError(error)}
-                                          onDelete={(id) => handleRecipeDeleted(id)}
-                                          onCloseModal={() => setIsModalShown(false)}
-                            />
+                            {isAuthorized && (
+                                <>
+                                    <Icon
+                                        size={0.8}
+                                        path={mdiPencilOutline}
+                                        style={{ color: 'orange', cursor: 'pointer' }}
+                                        onClick={() => handleShowModal(props.recipe)}
+                                    />
+                                    <RecipeDelete
+                                        recipe={props.recipe}
+                                        onError={(error) => setDeleteRecipeError(error)}
+                                        onDelete={(id) => handleRecipeDeleted(id)}
+                                        onCloseModal={() => setIsModalShown(false)}
+                                    />
+                                </>
+                            )}
                             <span>
                                 <Icon path={ mdiFoodVariant } size={1.2} color="grey"></Icon>{" "}
                             </span>
@@ -82,11 +89,11 @@ function Recipe(props) {
                             {(() => {
                                 return props.shortText ? (
                                     <>
-                                        {truncateText(props.recipe.description, 120)}
+                                        <div dangerouslySetInnerHTML={{ __html: truncateText(props.recipe.description, 120) }} />
                                         {getIngredients()}
                                     </>
                                 ) : (
-                                    props.recipe.description
+                                    <div dangerouslySetInnerHTML={{ __html: props.recipe.description }} />
                                 );
                             })()}
                         </Card.Text>
