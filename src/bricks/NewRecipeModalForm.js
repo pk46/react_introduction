@@ -10,7 +10,7 @@ import {mdiLoading} from "@mdi/js";
 
 const defaultForm = {
     id: "",
-    name: "AAAAAAAAAAAAAAAAAA",
+    name: "",
     description: "",
     imgUri: "",
     ingredients: [],
