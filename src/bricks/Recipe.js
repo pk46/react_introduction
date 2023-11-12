@@ -1,13 +1,14 @@
 import React, {useState} from 'react';
 
 import Card from 'react-bootstrap/Card';
-import { Col } from "react-bootstrap";
+import {Alert, Col, Modal} from "react-bootstrap";
 
 import Icon from '@mdi/react';
-import {mdiFoodVariant, mdiPencilOutline, mdiTrashCanOutline} from '@mdi/js';
+import {mdiFoodVariant, mdiPencilOutline} from '@mdi/js';
 
 import style from '../css/recipe.module.css';
 import NewRecipeModalForm from "./NewRecipeModalForm";
+import RecipeDelete from "./RecipeDelete";
 
 
 function Recipe(props) {
@@ -15,30 +16,16 @@ function Recipe(props) {
     const [showModal, setShowModal] = useState({
         state: false
     });
-    const [recipeDeleteCall, setRecipeDeleteCall] = useState({
-        state: "inactive"
-    })
+
+    const [deleteRecipeError, setDeleteRecipeError] = useState('');
 
     const handleShowModal = (data) => {
         setShowModal({state: true, data})
     }
 
-    const handleRecipeDelete = async (recipe) => {
-        setRecipeDeleteCall({state: "pending"})
-        const result = await fetch(`http://localhost:3000/recipe/delete`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ id: recipe.id })
-            });
-        const data = await result.json();
-        if (result.status >= 400) {
-            setRecipeDeleteCall({state: "error", error: data});
-        } else {
-            setRecipeDeleteCall({state: "success", data});
-        }
+    const [isModalShown, setIsModalShown] = useState(false);
+    const handleCloseModal = () => {
+        setIsModalShown(!isModalShown);
     }
 
     function truncateText(text, maxLength) {
@@ -58,6 +45,16 @@ function Recipe(props) {
         );
     }
 
+    const handleRecipeDeleted = (recipeId) => {
+        // setIsModalShown(false);
+        if (props.recipesCall.state === "success") {
+            props.setRecipesCall({
+                state: "success",
+                data: props.recipesCall.data.filter((recipe) => recipe.id !== recipeId)
+            });
+        }
+    };
+
     return (
         <>
             <Col lg={4}>
@@ -71,14 +68,14 @@ function Recipe(props) {
                                 style={{ color: 'orange', cursor: 'pointer' }}
                                 onClick={() => handleShowModal(props.recipe)}
                             />
-                            <Icon
-                                size={0.8}
-                                path={mdiTrashCanOutline}
-                                onClick={() => handleRecipeDelete(props.recipe)}
-                                />
+                            <RecipeDelete recipe={props.recipe}
+                                          onError={(error) => setDeleteRecipeError(error)}
+                                          onDelete={(id) => handleRecipeDeleted(id)}
+                                          onCloseModal={() => setIsModalShown(false)}
+                            />
                             <span>
-                  <Icon path={ mdiFoodVariant } size={1.2} color="grey"></Icon>{" "}
-                </span>
+                                <Icon path={ mdiFoodVariant } size={1.2} color="grey"></Icon>{" "}
+                            </span>
                             {props.recipe.name}
                         </Card.Title>
                         <Card.Text as="div">
@@ -97,6 +94,18 @@ function Recipe(props) {
                 </Card>
             </Col>
             <NewRecipeModalForm showModal={showModal.state} setShowModal={setShowModal} recipe={showModal.data} />
+            <Modal show={isModalShown} onHide={handleCloseModal} className={"hidden"}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Chyba při mazání receptů</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {deleteRecipeError &&
+                        <Alert variant="danger">
+                            Error: { deleteRecipeError }
+                        </Alert>
+                    }
+                </Modal.Body>
+            </Modal>
         </>
     );
 }

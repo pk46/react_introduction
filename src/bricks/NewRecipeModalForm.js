@@ -10,23 +10,31 @@ import {mdiLoading} from "@mdi/js";
 
 const defaultForm = {
     id: "",
-    name: "",
+    name: "AAAAAAAAAAAAAAAAAA",
     description: "",
     imgUri: "",
     ingredients: [],
 };
 
-function NewRecipeModalForm({showModal, setShowModal, recipe}) {
+function NewRecipeModalForm({showModal, setShowModal, recipe, onComplete}) {
     const [formData, setFormData] = useState(defaultForm);
     const [validated, setValidated] = useState(false);
     const [recipeAddCall, setRecipeAddCall] = useState({
         state: 'inactive'
     });
 
-    const handleDropdownValueChange = (value, index) => {
-        setField("ingredients", [...formData.ingredients.slice(0, index),
-            { name: value.name, id: value.id }], index);
+    const handleDropdownValueChange = (value, index, amount, unit) => {
+        const updatedIngredients = [...formData.ingredients];
+        updatedIngredients[index] = {
+            ...updatedIngredients[index],
+            name: value.name,
+            id: value.id,
+            amount: amount,
+            unit: unit,
+        };
+        setField("ingredients", updatedIngredients);
     };
+
 
     const handleIngredientAmountChange = (value, index) => {
         setField("ingredients.amount", value, index);
@@ -126,9 +134,11 @@ function NewRecipeModalForm({showModal, setShowModal, recipe}) {
             const data = await result.json();
             if (result.status >= 400) {
                 setRecipeAddCall({ state: "error", error: data });
-                console.log("data:" + data)
             } else {
                 setRecipeAddCall({ state: "success", data });
+                if (typeof onComplete === 'function') {
+                    onComplete(data);
+                }
                 handleCloseModal();
             }
         };
