@@ -1,15 +1,12 @@
 import Form from "react-bootstrap/Form";
 import React, { useEffect, useState } from "react";
-import { DropdownButton, Dropdown } from "react-bootstrap";
 import {mdiLoading} from "@mdi/js";
 import Icon from "@mdi/react";
 
-function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }) {
+function IngredientsDropdown({ selectedIngredient, ingredientAmount, ingredientUnit }) {
     const [ingredientsLoadCall, setIngredientsLoadCall] = useState({
         state: "pending",
     });
-
-    const [dropDownValue, setDropDownValue] = useState(null);
 
     useEffect(() => {
         fetch("http://localhost:3000/ingredient/list", { method: "GET" })
@@ -34,10 +31,9 @@ function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }
             });
     }, []);
 
-    const handleIngredientSelection = (eventKey) => {
-        const parsed = JSON.parse(eventKey);
-        setDropDownValue(parsed.name);
-        selectedValue(eventKey)
+    const handleIngredientSelection = (e) => {
+        const jsonObject = JSON.parse(e.target.value)
+        selectedIngredient(jsonObject)
     };
 
     function handleIngredientAmountChange(e) {
@@ -57,21 +53,24 @@ function IngredientsDropdown({ selectedValue, ingredientAmount, ingredientUnit }
                     case "success":
                         return (
                             <>
-                                <DropdownButton
-                                    onSelect={handleIngredientSelection}
-                                    variant="primary"
-                                    id="ingredients-dropdown"
-                                    title={dropDownValue ? dropDownValue : "Vyberte ingredience"}
-                                >
-                                    {ingredientsLoadCall.data.map((ingredient) => (
-                                        <Dropdown.Item
-                                            key={ingredient.id}
-                                            eventKey={JSON.stringify(ingredient)}
-                                        >
-                                            {ingredient.name}
-                                        </Dropdown.Item>
-                                    ))}
-                                </DropdownButton>
+                                <Form.Group>
+                                    <Form.Control as="select"
+                                                  onChange={handleIngredientSelection}
+                                                  variant="primary"
+                                                  required
+                                                  defaultValue=""
+                                    >
+                                        <option disabled value="">Vyberte ingredienci</option>
+                                        {ingredientsLoadCall.data.map((ingredient) => (
+                                            <option
+                                                key={ingredient.id}
+                                                value={JSON.stringify({ name: ingredient.name, id: ingredient.id })}
+                                            >
+                                                {ingredient.name}
+                                            </option>
+                                        ))}
+                                    </Form.Control>
+                                </Form.Group>
                                 <Form.Label>Množství</Form.Label>
                                 <Form.Control
                                     type="number"

@@ -14,3 +14,8 @@
   background-color: lightpink;
   padding: 32px;
 }
+
+.card:hover {
+  transform: scale(1.02);
+  transition: transform .3s;
+}

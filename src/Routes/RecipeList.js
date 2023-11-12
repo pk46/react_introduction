@@ -36,7 +36,7 @@ function RecipeList() {
     useEffect(() => {
         apiCall(recipesCall, setRecipesCall, `http://localhost:3000/recipe/list`);
         apiCall(ingredientsCall, setIngredientsCall, `http://localhost:3000/ingredient/list`);
-    }, [])
+    }, [recipesCall])
 
     function getChild() {
         if (recipesCall.state === "pending" || ingredientsCall.state === "pending") {
@@ -46,7 +46,12 @@ function RecipeList() {
                 </div>
             );
         } else if (recipesCall.state === "success" && ingredientsCall.state === "success") {
-            return <RecipesList recipesList={recipesCall.data} allIngredients={ingredientsCall.data}/>
+            return <RecipesList
+                recipesList={recipesCall.data}
+                allIngredients={ingredientsCall.data}
+                recipesCall={recipesCall}
+                setRecipesCall={setRecipesCall}
+            />
 
         } else if (recipesCall.state === "error" || ingredientsCall.state === "error") {
             return (
@@ -59,7 +64,7 @@ function RecipeList() {
             );
         }
     }
-    return getChild();
+    return <>{getChild()}</>;
 }
 
 export default RecipeList;
